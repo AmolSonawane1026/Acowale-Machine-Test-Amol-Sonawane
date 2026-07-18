@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Acowale Feedback",
-  description: "Acowale Feedback System",
+  title: "Acowale CRM",
+  description: "Acowale CRM System",
 };
 
 export default function RootLayout({ children }) {
