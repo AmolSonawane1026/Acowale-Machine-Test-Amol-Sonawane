@@ -12,21 +12,34 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Check auth on mount — validate httpOnly cookie by calling /auth/me
+  // Check auth on mount — validate httpOnly cookie or local token
   const checkAuth = useCallback(async () => {
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const headers = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const res = await axios.get(`${API_URL}/auth/me`, {
         withCredentials: true,
+        headers,
       });
 
       if (res.data.success) {
         setUser(res.data.user);
         setIsAuthenticated(true);
       } else {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("token");
+        }
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+      }
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -46,6 +59,9 @@ export function AuthProvider({ children }) {
     );
 
     if (res.data.success) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("token", res.data.token);
+      }
       setUser(res.data.user);
       setIsAuthenticated(true);
       return { success: true };
@@ -60,6 +76,9 @@ export function AuthProvider({ children }) {
     } catch {
       // Ignore errors — clear state regardless
     } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+      }
       setUser(null);
       setIsAuthenticated(false);
     }
